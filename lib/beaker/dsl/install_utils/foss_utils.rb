@@ -263,7 +263,7 @@ module Beaker
             # run_in_parallel option includes install
             run_in_parallel = run_in_parallel? opts, @options, 'install'
             block_on hosts, { :run_in_parallel => run_in_parallel } do |host|
-              if host['platform'] =~ /el-(5|6|7)/
+              if host['platform'] =~ /(((rh)?el)|redhat|centos)-(5|6|7)/
                 relver = $1
                 install_puppet_from_rpm_on(host, opts.merge(:release => relver, :family => 'el'))
               elsif host['platform'] =~ /fedora-(\d+)/
@@ -345,7 +345,7 @@ module Beaker
             add_role(host, 'aio') #we are installing agent, so we want aio role
             package_name = nil
             case host['platform']
-            when /el-|fedora|sles|centos|cisco_/
+            when /(rh)?el-|redhat|fedora|sles|centos|cisco_/
               package_name = 'puppet-agent'
               package_name << "-#{opts[:puppet_agent_version]}" if opts[:puppet_agent_version]
             when /debian|ubuntu|cumulus|huaweios/
@@ -830,7 +830,7 @@ module Beaker
               gempkg = case host['platform']
                        when /solaris-11/                            then 'ruby-18'
                        when /ubuntu-14/                             then 'ruby'
-                       when /solaris-10|ubuntu|debian|el-|cumulus|huaweios/  then 'rubygems'
+                       when /solaris-10|ubuntu|debian|(rh)?el-|redhat|cumulus|huaweios/  then 'rubygems'
                        when /openbsd/                               then 'ruby'
                        else
                          raise "install_puppet() called with default_action " +
@@ -906,16 +906,24 @@ module Beaker
             opts = FOSS_DEFAULT_DOWNLOAD_URLS.merge(opts)
 
             case variant
-            when /^(fedora|el|centos|sles|cisco_nexus|cisco_ios_xr)$/
-              variant_url_value = (($1 == 'centos') ? 'el' : $1)
+            when /^(fedora|(rh)?el|redhat|centos|sles|cisco_nexus|cisco_ios_xr)$/
+
+              variant_url_value = $1
+
+              if variant =~ /(rh)?el|redhat|centos/
+                variant_url_value = 'el'
+              end
+
               if variant == 'cisco_nexus'
                 variant_url_value = 'cisco-wrlinux'
                 version = '5'
               end
+
               if variant == 'cisco_ios_xr'
                 variant_url_value = 'cisco-wrlinux'
                 version = '7'
               end
+
               remote = "%s/puppetlabs-release%s-%s-%s.noarch.rpm" %
                 [opts[:release_yum_repo_url], repo_name, variant_url_value, version]
 
@@ -1007,7 +1015,7 @@ module Beaker
                                   repo_configs_dir = nil,
                                   opts = options )
           variant, version, arch, codename = host['platform'].to_array
-          if variant !~ /^(fedora|el|centos|debian|ubuntu|cumulus|huaweios|cisco_nexus|cisco_ios_xr|sles)$/
+          if variant !~ /^(fedora|(rh)?el|redhat|centos|debian|ubuntu|cumulus|huaweios|cisco_nexus|cisco_ios_xr|sles)$/
             raise "No repository installation step for #{variant} yet..."
           end
           repo_configs_dir ||= 'tmp/repo_configs'
@@ -1020,7 +1028,7 @@ module Beaker
           # url type
           _, protocol, hostname = opts[:dev_builds_url].partition /.*:\/\//
           dev_builds_url = protocol + hostname
-          dev_builds_url = opts[:dev_builds_url] if variant =~ /^(fedora|el|centos)$/
+          dev_builds_url = opts[:dev_builds_url] if variant =~ /^(fedora|(rh)?el|redhat|centos)$/
 
           install_repo_configs( host, dev_builds_url, package_name,
                                 build_version, platform_configs_dir )
@@ -1042,7 +1050,7 @@ module Beaker
           if host['platform'] =~ /debian|ubuntu|cumulus|huaweios/
             find_filename = '*.deb'
             find_command  = 'dpkg -i'
-          elsif host['platform'] =~ /fedora|el|centos/
+          elsif host['platform'] =~ /fedora|(rh)?el|redhat|centos/
             find_filename = '*.rpm'
             find_command  = 'rpm -ivh'
           else
@@ -1111,7 +1119,7 @@ module Beaker
             onhost_copy_base = opts[:copy_dir_external] || host.external_copy_base
 
             case variant
-            when /^(fedora|el|centos|debian|ubuntu|cumulus|huaweios|cisco_nexus|cisco_ios_xr)$/
+            when /^(fedora|(rh)?el|redhat|centos|debian|ubuntu|cumulus|huaweios|cisco_nexus|cisco_ios_xr)$/
               if arch == 's390x'
                 logger.trace("#install_puppet_agent_dev_repo_on: s390x arch detected for host #{host}. using dev package")
               else
@@ -1263,7 +1271,7 @@ module Beaker
             case host[:platform]
             when /cumulus|huaweios/
               pkgs = on(host, "dpkg-query -l  | awk '{print $2}' | grep -E '(^pe-|puppet)'", :acceptable_exit_codes => [0,1]).stdout.chomp.split(/\n+/)
-            when /aix|sles|el|redhat|centos|oracle|scientific/
+            when /aix|sles|(rh)?el|redhat|centos|oracle|scientific/
               pkgs = on(host, "rpm -qa  | grep -E '(^pe-|puppet)'", :acceptable_exit_codes => [0,1]).stdout.chomp.split(/\n+/)
             when /solaris-10/
               cmdline_args = '-a noask'

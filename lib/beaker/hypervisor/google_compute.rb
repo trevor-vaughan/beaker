@@ -13,7 +13,9 @@ module Beaker
     def format_metadata
       [ {:key => :department, :value => @options[:department]},
         {:key => :project, :value => @options[:project]},
-        {:key => :jenkins_build_url, :value => @options[:jenkins_build_url]} ].delete_if { |member| member[:value].nil? or member[:value].empty?}
+        {:key => :jenkins_build_url, :value => @options[:jenkins_build_url]},
+        {:key => :sshKeys, :value => "google_compute:#{File.read(File.join([ENV['HOME'], '.ssh/google_compute_engine.pub']))}" }
+      ].delete_if { |member| member[:value].nil? or member[:value].empty?}
     end
 
     #Create a new instance of the Google Compute Engine hypervisor object
@@ -82,7 +84,7 @@ module Beaker
         default_user = host['user']
         host['user'] = 'google_compute'
 
-        disable_se_linux(host, @options)
+        #disable_se_linux(host, @options)
         copy_ssh_to_root(host, @options)
         enable_root_login(host, @options)
         host['user'] = default_user

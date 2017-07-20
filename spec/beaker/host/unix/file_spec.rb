@@ -38,6 +38,12 @@ module Beaker
     describe '#repo_type' do
 
       it 'returns correctly for el-based platforms' do
+        @platform = 'el-6-x86_64'
+        expect( instance.repo_type ).to be === 'rpm'
+
+        @platform = 'rhel-6-x86_64'
+        expect( instance.repo_type ).to be === 'rpm'
+
         @platform = 'centos-6-x86_64'
         expect( instance.repo_type ).to be === 'rpm'
       end
@@ -58,6 +64,12 @@ module Beaker
     describe '#package_config_dir' do
 
       it 'returns correctly for el-based platforms' do
+        @platform = 'rhel-6-x86_64'
+        expect( instance.package_config_dir ).to be === '/etc/yum.repos.d/'
+
+        @platform = 'el-6-x86_64'
+        expect( instance.package_config_dir ).to be === '/etc/yum.repos.d/'
+
         @platform = 'centos-6-x86_64'
         expect( instance.package_config_dir ).to be === '/etc/yum.repos.d/'
       end
@@ -97,6 +109,18 @@ module Beaker
       end
 
       it 'builds the filename correctly for el-based platforms' do
+        @platform = 'centos-21-x86_64'
+        allow( instance ).to receive( :is_pe? ) { false }
+        filename = instance.repo_filename( 'pkg_name', 'pkg_version8' )
+        correct = 'pl-pkg_name-pkg_version8-el-21-x86_64.repo'
+        expect( filename ).to be === correct
+
+        @platform = 'rhel-21-x86_64'
+        allow( instance ).to receive( :is_pe? ) { false }
+        filename = instance.repo_filename( 'pkg_name', 'pkg_version8' )
+        correct = 'pl-pkg_name-pkg_version8-el-21-x86_64.repo'
+        expect( filename ).to be === correct
+
         @platform = 'el-21-x86_64'
         allow( instance ).to receive( :is_pe? ) { false }
         filename = instance.repo_filename( 'pkg_name', 'pkg_version8' )
@@ -105,6 +129,18 @@ module Beaker
       end
 
       it 'adds in the PE portion of the filename correctly for el-based PE hosts' do
+        @platform = 'centos-21-x86_64'
+        allow( instance ).to receive( :is_pe? ) { true }
+        filename = instance.repo_filename( 'pkg_name', 'pkg_version9' )
+        correct = 'pl-pkg_name-pkg_version9-repos-pe-el-21-x86_64.repo'
+        expect( filename ).to be === correct
+
+        @platform = 'rhel-21-x86_64'
+        allow( instance ).to receive( :is_pe? ) { true }
+        filename = instance.repo_filename( 'pkg_name', 'pkg_version9' )
+        correct = 'pl-pkg_name-pkg_version9-repos-pe-el-21-x86_64.repo'
+        expect( filename ).to be === correct
+
         @platform = 'el-21-x86_64'
         allow( instance ).to receive( :is_pe? ) { true }
         filename = instance.repo_filename( 'pkg_name', 'pkg_version9' )

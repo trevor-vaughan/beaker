@@ -133,6 +133,7 @@ module PlatformHelpers
   FEDORASYSTEMD    = (14..29).to_a.collect! { |i| "fedora-#{i}" }
 
   SYSTEMDPLATFORMS = ['el-7',
+                      'rhel-7',
                       'centos-7',
                       'redhat-7',
                       'oracle-7',
@@ -142,6 +143,7 @@ module PlatformHelpers
   FEDORASYSTEMV    = (1..13).to_a.collect! { |i| "fedora-#{i}" }
 
   SYSTEMVPLATFORMS = ['el-',
+                      'rhel-',
                       'centos',
                       'fedora',
                       'redhat',

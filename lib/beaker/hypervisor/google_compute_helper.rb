@@ -17,6 +17,7 @@ module Beaker
     BASE_URL = "https://www.googleapis.com/compute/#{API_VERSION}/projects/"
     CENTOS_PROJECT = 'centos-cloud'
     DEBIAN_PROJECT = 'debian-cloud'
+    RHEL_PROJECT = 'rhel-cloud'
     DEFAULT_ZONE_NAME = 'us-central1-a'
     DEFAULT_MACHINE_TYPE = 'n1-highmem-2'
     DEFAULT_DISK_SIZE = 25
@@ -68,6 +69,8 @@ module Beaker
         return DEBIAN_PROJECT
       elsif name =~ /centos/
         return CENTOS_PROJECT
+      elsif name =~ /rhel/
+        return RHEL_PROJECT
       else
         raise "Unsupported platform for Google Compute Engine: #{name}"
       end

@@ -445,44 +445,79 @@ describe ClassMixedWithDSLInstallUtils do
       allow( subject ).to receive(:hosts).and_return(hosts)
       allow( subject ).to receive(:on).and_return(Beaker::Result.new({},''))
     end
-    context 'on el-6' do
-      let(:platform) { Beaker::Platform.new('el-6-i386') }
-      it 'installs' do
-        expect(hosts[0]).to receive(:install_package_with_rpm).with(/puppetlabs-release-el-6\.noarch\.rpm/, '--replacepkgs', {:package_proxy=>false})
-        expect(hosts[0]).to receive(:install_package).with('puppet')
-        subject.install_puppet
+
+    ['redhat', 'rhel', 'centos'].each do |_platform|
+      context "on #{_platform}-7" do
+        let(:platform) { Beaker::Platform.new("#{_platform}-7-i686") }
+        it 'installs' do
+          expect(hosts[0]).to receive(:install_package_with_rpm).with(/puppetlabs-release-el-7\.noarch\.rpm/, '--replacepkgs', {:package_proxy=>false})
+          expect(hosts[0]).to receive(:install_package).with('puppet')
+          subject.install_puppet
+        end
+        it 'installs in parallel' do
+          InParallel::InParallelExecutor.logger = logger
+          FakeFS.deactivate!
+          hosts.each{ |host|
+            allow(host).to receive(:install_package_with_rpm).with(/puppetlabs-release-el-7\.noarch\.rpm/, '--replacepkgs', {:package_proxy=>false})
+            allow(host).to receive(:install_package).with('puppet')
+          }
+          opts[:run_in_parallel] = true
+          # This will only get hit if forking processes is supported and at least 2 items are being submitted to run in parallel
+          expect( InParallel::InParallelExecutor ).to receive(:_execute_in_parallel).with(any_args).and_call_original.exactly(3).times
+          subject.install_puppet(opts)
+        end
+        it 'installs specific version of puppet when passed :version' do
+          expect(hosts[0]).to receive(:install_package).with('puppet-3')
+          subject.install_puppet( :version => '3' )
+        end
+        it 'can install specific versions of puppets dependencies' do
+          expect(hosts[0]).to receive(:install_package).with('puppet-3')
+          expect(hosts[0]).to receive(:install_package).with('hiera-2001')
+          expect(hosts[0]).to receive(:install_package).with('facter-1999')
+          subject.install_puppet( :version => '3', :facter_version => '1999', :hiera_version => '2001' )
+        end
       end
-      it 'installs in parallel' do
-        InParallel::InParallelExecutor.logger = logger
-        FakeFS.deactivate!
-        hosts.each{ |host|
-          allow(host).to receive(:install_package_with_rpm).with(/puppetlabs-release-el-6\.noarch\.rpm/, '--replacepkgs', {:package_proxy=>false})
-          allow(host).to receive(:install_package).with('puppet')
-        }
-        opts[:run_in_parallel] = true
-        # This will only get hit if forking processes is supported and at least 2 items are being submitted to run in parallel
-        expect( InParallel::InParallelExecutor ).to receive(:_execute_in_parallel).with(any_args).and_call_original.exactly(3).times
-        subject.install_puppet(opts)
+
+      context "on #{_platform}-6" do
+        let(:platform) { Beaker::Platform.new("#{_platform}-6-i386") }
+        it 'installs' do
+          expect(hosts[0]).to receive(:install_package_with_rpm).with(/puppetlabs-release-el-6\.noarch\.rpm/, '--replacepkgs', {:package_proxy=>false})
+          expect(hosts[0]).to receive(:install_package).with('puppet')
+          subject.install_puppet
+        end
+        it 'installs in parallel' do
+          InParallel::InParallelExecutor.logger = logger
+          FakeFS.deactivate!
+          hosts.each{ |host|
+            allow(host).to receive(:install_package_with_rpm).with(/puppetlabs-release-el-6\.noarch\.rpm/, '--replacepkgs', {:package_proxy=>false})
+            allow(host).to receive(:install_package).with('puppet')
+          }
+          opts[:run_in_parallel] = true
+          # This will only get hit if forking processes is supported and at least 2 items are being submitted to run in parallel
+          expect( InParallel::InParallelExecutor ).to receive(:_execute_in_parallel).with(any_args).and_call_original.exactly(3).times
+          subject.install_puppet(opts)
+        end
+        it 'installs specific version of puppet when passed :version' do
+          expect(hosts[0]).to receive(:install_package).with('puppet-3')
+          subject.install_puppet( :version => '3' )
+        end
+        it 'can install specific versions of puppets dependencies' do
+          expect(hosts[0]).to receive(:install_package).with('puppet-3')
+          expect(hosts[0]).to receive(:install_package).with('hiera-2001')
+          expect(hosts[0]).to receive(:install_package).with('facter-1999')
+          subject.install_puppet( :version => '3', :facter_version => '1999', :hiera_version => '2001' )
+        end
       end
-      it 'installs specific version of puppet when passed :version' do
-        expect(hosts[0]).to receive(:install_package).with('puppet-3')
-        subject.install_puppet( :version => '3' )
-      end
-      it 'can install specific versions of puppets dependencies' do
-        expect(hosts[0]).to receive(:install_package).with('puppet-3')
-        expect(hosts[0]).to receive(:install_package).with('hiera-2001')
-        expect(hosts[0]).to receive(:install_package).with('facter-1999')
-        subject.install_puppet( :version => '3', :facter_version => '1999', :hiera_version => '2001' )
+      context "on #{_platform}-5" do
+        let(:platform) { Beaker::Platform.new("#{_platform}-5-i386") }
+        it 'installs' do
+          expect(hosts[0]).to receive(:install_package_with_rpm).with(/puppetlabs-release-el-5\.noarch\.rpm/, '--replacepkgs', {:package_proxy=>false})
+          expect(hosts[0]).to receive(:install_package).with('puppet')
+          subject.install_puppet
+        end
       end
     end
-    context 'on el-5' do
-      let(:platform) { Beaker::Platform.new('el-5-i386') }
-      it 'installs' do
-        expect(hosts[0]).to receive(:install_package_with_rpm).with(/puppetlabs-release-el-5\.noarch\.rpm/, '--replacepkgs', {:package_proxy=>false})
-        expect(hosts[0]).to receive(:install_package).with('puppet')
-        subject.install_puppet
-      end
-    end
+
     context 'on fedora' do
       let(:platform) { Beaker::Platform.new('fedora-18-x86_84') }
       it 'installs' do
@@ -780,6 +815,9 @@ describe ClassMixedWithDSLInstallUtils do
       end
 
       describe "that are redhat-like" do
+        let( :platform ) { Beaker::Platform.new('rhel-7-i386') }
+        include_examples "install-dev-repo"
+
         let( :platform ) { Beaker::Platform.new('el-7-i386') }
         include_examples "install-dev-repo"
       end

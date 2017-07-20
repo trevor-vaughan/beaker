@@ -306,8 +306,9 @@ describe Beaker do
 
     it 'adds archived extras for el-5 hosts' do
 
-      hosts = make_hosts( { :platform => Beaker::Platform.new('el-5-arch'), :exit_code => 1 }, 2 )
+      hosts = make_hosts( { :platform => Beaker::Platform.new('el-5-arch'), :exit_code => 1 }, 3 )
       hosts[1][:platform] = Beaker::Platform.new('oracle-5-arch')
+      hosts[2][:platform] = Beaker::Platform.new('rhel-5-arch')
 
       expect( Beaker::Command ).to receive( :new ).with(
         "rpm -qa | grep epel-release"
@@ -331,10 +332,11 @@ describe Beaker do
 
     it 'adds extras for el-6 hosts' do
 
-      hosts = make_hosts( { :platform => Beaker::Platform.new('el-6-arch'), :exit_code => 1 }, 4 )
+      hosts = make_hosts( { :platform => Beaker::Platform.new('el-6-arch'), :exit_code => 1 }, 5 )
       hosts[1][:platform] = Beaker::Platform.new('centos-6-arch')
       hosts[2][:platform] = Beaker::Platform.new('scientific-6-arch')
       hosts[3][:platform] = Beaker::Platform.new('redhat-6-arch')
+      hosts[4][:platform] = Beaker::Platform.new('rhel-6-arch')
 
       expect( Beaker::Command ).to receive( :new ).with(
         "rpm -qa | grep epel-release"

@@ -228,6 +228,14 @@ module Unix
     describe '#validate_setup' do
 
       it 'does nothing for non cisco_nexus-7 platforms' do
+        @platform = 'centos-7-x86_64'
+        validate_test = host.validate_setup
+        expect( validate_test ).to be_nil
+
+        @platform = 'rhel-7-x86_64'
+        validate_test = host.validate_setup
+        expect( validate_test ).to be_nil
+
         @platform = 'el-7-x86_64'
         validate_test = host.validate_setup
         expect( validate_test ).to be_nil

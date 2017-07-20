@@ -82,7 +82,7 @@ module Unix::Pkg
           name = "#{name}-#{version}"
         end
         execute("dnf -y #{cmdline_args} install #{name}", opts)
-      when /cisco|fedora|centos|eos|el-/
+      when /cisco|fedora|centos|eos|redhat|(rh)?el-/
         if version
           name = "#{name}-#{version}"
         end
@@ -407,8 +407,8 @@ module Unix::Pkg
     when /^(solaris)$/
       release_path_end, release_file = solaris_puppet_agent_dev_package_info(
         puppet_collection, puppet_agent_version, opts )
-    when /^(sles|aix|el|centos|oracle|redhat|scientific)$/
-      variant = 'el' if variant.match(/(?:el|centos|oracle|redhat|scientific)/)
+    when /^(sles|aix|(rh)?el|centos|oracle|redhat|scientific)$/
+      variant = 'el' if variant.match(/(?:(rh)?el|centos|oracle|redhat|scientific)/)
       arch = 'ppc' if variant == 'aix' && arch == 'power'
       version = '7.1' if variant == 'aix' && version == '7.2'
       release_path_end = "#{variant}/#{version}/#{puppet_collection}/#{arch}"
@@ -436,7 +436,7 @@ module Unix::Pkg
 
     variant, version, arch, codename = self['platform'].to_array
     case variant
-    when /^(fedora|el|centos|sles)$/
+    when /^(fedora|(rh)?el|centos|sles)$/
       variant = ((variant == 'centos') ? 'el' : variant)
       release_file = "/repos/#{variant}/#{version}/#{puppet_collection}/#{arch}/puppet-agent-*.rpm"
       download_file = "puppet-agent-#{variant}-#{version}-#{arch}.tar.gz"
@@ -476,7 +476,7 @@ module Unix::Pkg
     when /^(fedora-(2[2-9]))$/
       execute("tar -zxvf #{onhost_copied_download} -C #{onhost_copy_base}")
       execute("dnf --nogpgcheck localinstall -y #{onhost_copied_file}")
-    when /^(fedora|el|centos)$/
+    when /^(fedora|(rh)?el|centos)$/
       execute("tar -zxvf #{onhost_copied_download} -C #{onhost_copy_base}")
       execute("yum --nogpgcheck localinstall -y #{onhost_copied_file}")
     when /^(sles)$/

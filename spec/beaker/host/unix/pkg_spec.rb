@@ -60,6 +60,16 @@ module Beaker
         end
 
         it 'calls #deploy_yum_repo for el systems' do
+          @opts = {'platform' => 'centos-is-me'}
+          expect(instance).to receive(:deploy_yum_repo)
+          allow(File).to receive(:exists?).with(path).and_return(true)
+          instance.deploy_package_repo(path,name,version)
+
+          @opts = {'platform' => 'rhel-is-me'}
+          expect(instance).to receive(:deploy_yum_repo)
+          allow(File).to receive(:exists?).with(path).and_return(true)
+          instance.deploy_package_repo(path,name,version)
+
           @opts = {'platform' => 'el-is-me'}
           expect(instance).to receive(:deploy_yum_repo)
           allow(File).to receive(:exists?).with(path).and_return(true)
@@ -128,6 +138,18 @@ module Beaker
       end
 
       it "checks correctly on el-" do
+        @opts = {'platform' => 'rhel-is-me'}
+        pkg = 'el_package'
+        expect( Beaker::Command ).to receive(:new).with("rpm -q #{pkg}", [], {:prepend_cmds=>nil, :cmdexe=>false}).and_return('')
+        expect( instance ).to receive(:exec).with('', :accept_all_exit_codes => true).and_return(generate_result("hello", {:exit_code => 0}))
+        expect( instance.check_for_package(pkg) ).to be === true
+
+        @opts = {'platform' => 'centos-is-me'}
+        pkg = 'el_package'
+        expect( Beaker::Command ).to receive(:new).with("rpm -q #{pkg}", [], {:prepend_cmds=>nil, :cmdexe=>false}).and_return('')
+        expect( instance ).to receive(:exec).with('', :accept_all_exit_codes => true).and_return(generate_result("hello", {:exit_code => 0}))
+        expect( instance.check_for_package(pkg) ).to be === true
+
         @opts = {'platform' => 'el-is-me'}
         pkg = 'el_package'
         expect( Beaker::Command ).to receive(:new).with("rpm -q #{pkg}", [], {:prepend_cmds=>nil, :cmdexe=>false}).and_return('')
@@ -191,6 +213,10 @@ module Beaker
       end
 
       it "returns false for el-4" do
+        @opts = {'platform' => 'rhel-4-is-me'}
+        pkg = 'el-4_package'
+        expect( instance.check_for_package(pkg) ).to be === false
+
         @opts = {'platform' => 'el-4-is-me'}
         pkg = 'el-4_package'
         expect( instance.check_for_package(pkg) ).to be === false
@@ -294,6 +320,7 @@ module Beaker
                     'solaris-11-x86_64' => ["solaris/11/#{puppet_collection}", "puppet-agent@#{puppet_agent_version},5.11-1.i386.p5p"],
                     'sles-11-x86_64' => ["sles/11/#{puppet_collection}/x86_64", "puppet-agent-#{puppet_agent_version}-1.sles11.x86_64.rpm"],
                     'aix-5.3-power' => ["aix/5.3/#{puppet_collection}/ppc", "puppet-agent-#{puppet_agent_version}-1.aix5.3.ppc.rpm"],
+                    'rhel-7-x86_64' => ["el/7/#{puppet_collection}/x86_64", "puppet-agent-#{puppet_agent_version}-1.el7.x86_64.rpm"],
                     'el-7-x86_64' => ["el/7/#{puppet_collection}/x86_64", "puppet-agent-#{puppet_agent_version}-1.el7.x86_64.rpm"],
                     'centos-7-x86_64' => ["el/7/#{puppet_collection}/x86_64", "puppet-agent-#{puppet_agent_version}-1.el7.x86_64.rpm"],
                     'oracle-7-x86_64' => ["el/7/#{puppet_collection}/x86_64", "puppet-agent-#{puppet_agent_version}-1.el7.x86_64.rpm"],
@@ -323,6 +350,18 @@ module Beaker
     context "install_package_with_rpm" do
 
       it "accepts a package as a single argument" do
+        @opts = {'platform' => 'centos-is-me'}
+        pkg = 'redhat_package'
+        expect( Beaker::Command ).to receive(:new).with("rpm  -Uvh #{pkg} ", [], {:prepend_cmds=>nil, :cmdexe=>false}).and_return('')
+        expect( instance ).to receive(:exec).with('', {}).and_return(generate_result("hello", {:exit_code => 0}))
+        expect( instance.install_package_with_rpm(pkg) ).to be == "hello"
+
+        @opts = {'platform' => 'rhel-is-me'}
+        pkg = 'redhat_package'
+        expect( Beaker::Command ).to receive(:new).with("rpm  -Uvh #{pkg} ", [], {:prepend_cmds=>nil, :cmdexe=>false}).and_return('')
+        expect( instance ).to receive(:exec).with('', {}).and_return(generate_result("hello", {:exit_code => 0}))
+        expect( instance.install_package_with_rpm(pkg) ).to be == "hello"
+
         @opts = {'platform' => 'el-is-me'}
         pkg = 'redhat_package'
         expect( Beaker::Command ).to receive(:new).with("rpm  -Uvh #{pkg} ", [], {:prepend_cmds=>nil, :cmdexe=>false}).and_return('')
@@ -331,6 +370,19 @@ module Beaker
       end
 
       it "accepts a package and additional options" do
+        @opts = {'platform' => 'centos-is-me'}
+        pkg = 'redhat_package'
+        cmdline_args = '--foo'
+        expect( Beaker::Command ).to receive(:new).with("rpm #{cmdline_args} -Uvh #{pkg} ", [], {:prepend_cmds=>nil, :cmdexe=>false}).and_return('')
+        expect( instance ).to receive(:exec).with('', {}).and_return(generate_result("hello", {:exit_code => 0}))
+        expect( instance.install_package_with_rpm(pkg, cmdline_args) ).to be == "hello"
+        @opts = {'platform' => 'rhel-is-me'}
+        pkg = 'redhat_package'
+        cmdline_args = '--foo'
+        expect( Beaker::Command ).to receive(:new).with("rpm #{cmdline_args} -Uvh #{pkg} ", [], {:prepend_cmds=>nil, :cmdexe=>false}).and_return('')
+        expect( instance ).to receive(:exec).with('', {}).and_return(generate_result("hello", {:exit_code => 0}))
+        expect( instance.install_package_with_rpm(pkg, cmdline_args) ).to be == "hello"
+
         @opts = {'platform' => 'el-is-me'}
         pkg = 'redhat_package'
         cmdline_args = '--foo'
