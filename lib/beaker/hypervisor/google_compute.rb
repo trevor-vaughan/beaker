@@ -8,13 +8,24 @@ module Beaker
     #number of hours before an instance is considered a zombie
     ZOMBIE = 3
 
+    # Do some reasonable sleuthing on the SSH public key for GCE
+    def find_google_public_ssh_key
+      keyfile = ENV.fetch('BEAKER_gce_public_ssh_key', File.join(ENV['HOME'], '.ssh', 'google_compute_engine.pub'))
+
+      if @options[:gce_public_ssh_key] && !File.exist?(keyfile)
+        keyfile = @options[:gce_public_ssh_key]
+      end
+
+      raise(Error, "Could not find GCE Public SSH Key at '#{keyfile}'") unless File.exist?(keyfile)
+    end
+
     #Create the array of metaData, each member being a hash with a :key and a :value.  Sets
     #:department, :project and :jenkins_build_url.
     def format_metadata
       [ {:key => :department, :value => @options[:department]},
         {:key => :project, :value => @options[:project]},
         {:key => :jenkins_build_url, :value => @options[:jenkins_build_url]},
-        {:key => :sshKeys, :value => "google_compute:#{File.read(File.join([ENV['HOME'], '.ssh/google_compute_engine.pub']))}" }
+        {:key => :sshKeys, :value => "google_compute:#{File.read(find_google_public_ssh_key)}" }
       ].delete_if { |member| member[:value].nil? or member[:value].empty?}
     end
 

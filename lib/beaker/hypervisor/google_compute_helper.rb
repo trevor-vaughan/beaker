@@ -18,6 +18,7 @@ module Beaker
     CENTOS_PROJECT = 'centos-cloud'
     DEBIAN_PROJECT = 'debian-cloud'
     RHEL_PROJECT = 'rhel-cloud'
+    SLES_PROJECT = 'sles-cloud'
     DEFAULT_ZONE_NAME = 'us-central1-a'
     DEFAULT_MACHINE_TYPE = 'n1-highmem-2'
     DEFAULT_DISK_SIZE = 25
@@ -40,8 +41,18 @@ module Beaker
       set_client(Beaker::Version::STRING)
       set_compute_api(API_VERSION, start, attempts)
 
+      @options[:gce_project] = ENV['BEAKER_gce_project'] if ENV['BEAKER_gce_project']
+      @options[:gce_keyfile] = ENV['BEAKER_gce_keyfile'] if ENV['BEAKER_gce_keyfile']
+
+      unless File.exist?(@options[:gce_keyfile])
+        @options[:gce_keyfile] = File.join(ENV['HOME'], '.beaker', 'gce', %(#{@options[:gce_project]}.p12))
+      end
+
+      @options[:gce_password] = ENV['BEAKER_gce_password'] if ENV['BEAKER_gce_password']
+      @options[:gce_email] = ENV['BEAKER_gce_email'] if ENV['BEAKER_gce_email']
+
       raise 'You must specify a gce_project for Google Compute Engine instances!' unless @options[:gce_project]
-      raise 'You must specify a gce_keyfile for Google Compute Engine instances!' unless @options[:gce_keyfile]
+      raise "Could not find gce_keyfile for Google Compute Engine at '#{@options[:gce_keyfile]}'!" unless File.exist?(@options[:gce_keyfile])
       raise 'You must specify a gce_password for Google Compute Engine instances!' unless @options[:gce_password]
       raise 'You must specify a gce_email for Google Compute Engine instances!' unless @options[:gce_email]
 
@@ -71,6 +82,8 @@ module Beaker
         return CENTOS_PROJECT
       elsif name =~ /rhel/
         return RHEL_PROJECT
+      elsif name =~ /sles/
+        return SLES_PROJECT
       else
         raise "Unsupported platform for Google Compute Engine: #{name}"
       end
