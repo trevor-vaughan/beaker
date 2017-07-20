@@ -27,7 +27,7 @@ module Beaker
       [ {:key => :department, :value => @options[:department]},
         {:key => :project, :value => @options[:project]},
         {:key => :jenkins_build_url, :value => @options[:jenkins_build_url]},
-        {:key => :sshKeys, :value => "google_compute:#{File.read(find_google_ssh_public_key)}" }
+        {:key => :sshKeys, :value => "google_compute:#{File.read(find_google_ssh_public_key).strip}" }
       ].delete_if { |member| member[:value].nil? or member[:value].empty?}
     end
 
@@ -57,14 +57,14 @@ module Beaker
       attempts = @options[:timeout].to_i / SLEEPWAIT
       start = Time.now
 
-      unique_name = "beaker-#{start.to_i}-#{generate_host_name}"
+      test_group_identifier = "beaker-#{start.to_i}-"
 
       #get machineType resource, used by all instances
       machineType = @gce_helper.get_machineType(start, attempts)
 
       #set firewall to open pe ports
       network = @gce_helper.get_network(start, attempts)
-      @firewall = unique_name
+      @firewall = test_group_identifier + generate_host_name
       @gce_helper.create_firewall(@firewall, network, start, attempts)
 
       @logger.debug("Created Google Compute firewall #{@firewall}")
@@ -73,12 +73,15 @@ module Beaker
       @hosts.each do |host|
         gplatform = Platform.new(host[:image] || host[:platform])
         img = @gce_helper.get_latest_image(gplatform, start, attempts)
-        host['diskname'] = unique_name
+
+        unique_host_id = test_group_identifier + generate_host_name
+
+        host['diskname'] = unique_host_id
         disk = @gce_helper.create_disk(host['diskname'], img, start, attempts)
         @logger.debug("Created Google Compute disk for #{host.name}: #{host['diskname']}")
 
         #create new host name
-        host['vmhostname'] = unique_name
+        host['vmhostname'] = unique_host_id
         #add a new instance of the image
         instance = @gce_helper.create_instance(host['vmhostname'], img, machineType, disk, start, attempts)
         @logger.debug("Created Google Compute instance for #{host.name}: #{host['vmhostname']}")
